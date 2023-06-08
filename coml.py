@@ -11,14 +11,16 @@ from sklearn.decomposition import PCA
 from transformers import DistilBertTokenizer, DistilBertModel
 from sklearn.metrics.pairwise import cosine_similarity
 
+
 def seed_everything(seed: int = 2023):
     random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
+
 
 def passed():
     from IPython.display import HTML
@@ -74,6 +76,7 @@ def passed():
     """
         % (random.sample(pups, 1)[0])
     )
+
 
 def get_pc(
     embeddings: np.ndarray,
@@ -171,8 +174,6 @@ def get_cls_embeddings(texts: List[str], model, tokenizer) -> np.ndarray:
     return embeddings.detach().numpy()
 
 
-
-
 def test_embeddings(texts, embeddings, model, tokenizer):
     avg_embeddings = get_avg_embeddings(texts, model, tokenizer)
     cls_embeddings = get_cls_embeddings(texts, model, tokenizer)
@@ -188,29 +189,31 @@ def test_embeddings(texts, embeddings, model, tokenizer):
         return None
 
 
+def get_similarity(target, candidates, top_k: int = 3) -> Dict[int, float]:
+    # Turn list into array
+    candidates = np.array(candidates)
+    target = np.expand_dims(np.array(target), axis=0)
 
-def get_similarity(target, candidates, top_k:int = 3) -> Dict[int, float]:
-  # Turn list into array
-  candidates = np.array(candidates)
-  target = np.expand_dims(np.array(target),axis=0)
+    # Calculate cosine similarity
+    sim = cosine_similarity(target, candidates)
+    sim = np.squeeze(sim).tolist()
 
-  # Calculate cosine similarity
-  sim = cosine_similarity(target, candidates)
-  sim = np.squeeze(sim).tolist()
-  sort_index = np.argsort(sim)[::-1][:top_k]
-  sort_score = [sim[i] for i in sort_index][:top_k]
-  similarity_scores = dict(zip(sort_index, sort_score))
+    sort_index = np.argsort(sim)[::-1][:top_k]
+    sort_score = [sim[i] for i in sort_index][:top_k]
+    similarity_scores = dict(zip(sort_index, sort_score))
 
-  # Return similarity scores
-  return similarity_scores
+    # Return similarity scores
+    return similarity_scores
 
 
-def test_similarity(target, candidates, similarity, top_k:int = 3):
+def test_similarity(target, candidates, similarity, top_k: int = 3):
     actual_similarity = get_similarity(target, candidates, top_k)
     if actual_similarity == similarity:
         print("YAYYY!! Test passed! 🎉🎉🎉\n\n\n")
         return passed()
     else:
         print("Oh no! Test failed! 😢")
-        print(f"Similarity scores do not match! Expected: {similarity}, Actual: {actual_similarity}")
+        print(
+            f"Similarity scores do not match! Expected: {similarity}, Actual: {actual_similarity}"
+        )
         return None
