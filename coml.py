@@ -8,7 +8,63 @@ import altair as alt
 from typing import List, Tuple, Dict, Union
 from sklearn.decomposition import PCA
 from transformers import DistilBertTokenizer, DistilBertModel
+from sklearn.metrics.pairwise import cosine_similarity
 
+
+def passed():
+    from IPython.display import HTML
+
+    pups = [
+        "2m78jPG",
+        "pn1e9TO",
+        "MQCIwzT",
+        "udLK6FS",
+        "ZNem5o3",
+        "DS2IZ6K",
+        "aydRUz8",
+        "MVUdQYK",
+        "kLvno0p",
+        "wScLiVz",
+        "Z0TII8i",
+        "F1SChho",
+        "9hRi2jN",
+        "lvzRF3W",
+        "fqHxOGI",
+        "1xeUYme",
+        "6tVqKyM",
+        "CCxZ6Wr",
+        "lMW0OPQ",
+        "wHVpHVG",
+        "Wj2PGRl",
+        "HlaTE8H",
+        "k5jALH0",
+        "3V37Hqr",
+        "Eq2uMTA",
+        "Vy9JShx",
+        "g9I2ZmK",
+        "Nu4RH7f",
+        "sWp0Dqd",
+        "bRKfspn",
+        "qawCMl5",
+        "2F6j2B4",
+        "fiJxCVA",
+        "pCAIlxD",
+        "zJx2skh",
+        "2Gdl1u7",
+        "aJJAY4c",
+        "ros6RLC",
+        "DKLBJh7",
+        "eyxH0Wc",
+        "rJEkEw4",
+    ]
+    return HTML(
+        """
+    <video alt="test" controls autoplay=1>
+        <source src="https://openpuppies.com/mp4/%s.mp4"  type="video/mp4">
+    </video>
+    """
+        % (random.sample(pups, 1)[0])
+    )
 
 def get_pc(
     embeddings: np.ndarray,
@@ -106,6 +162,8 @@ def get_cls_embeddings(texts: List[str], model, tokenizer) -> np.ndarray:
     return embeddings.detach().numpy()
 
 
+
+
 def test_embeddings(texts, embeddings, model, tokenizer):
     avg_embeddings = get_avg_embeddings(texts, model, tokenizer)
     cls_embeddings = get_cls_embeddings(texts, model, tokenizer)
@@ -114,62 +172,36 @@ def test_embeddings(texts, embeddings, model, tokenizer):
     is_cls_embeddings = np.allclose(cls_embeddings, embeddings, atol=1e-3)
 
     if is_avg_embeddings or is_cls_embeddings:
-        print("YAYYY!! Test passed! 🎉🎉🎉")
-        from IPython.display import HTML
-
-        pups = [
-            "2m78jPG",
-            "pn1e9TO",
-            "MQCIwzT",
-            "udLK6FS",
-            "ZNem5o3",
-            "DS2IZ6K",
-            "aydRUz8",
-            "MVUdQYK",
-            "kLvno0p",
-            "wScLiVz",
-            "Z0TII8i",
-            "F1SChho",
-            "9hRi2jN",
-            "lvzRF3W",
-            "fqHxOGI",
-            "1xeUYme",
-            "6tVqKyM",
-            "CCxZ6Wr",
-            "lMW0OPQ",
-            "wHVpHVG",
-            "Wj2PGRl",
-            "HlaTE8H",
-            "k5jALH0",
-            "3V37Hqr",
-            "Eq2uMTA",
-            "Vy9JShx",
-            "g9I2ZmK",
-            "Nu4RH7f",
-            "sWp0Dqd",
-            "bRKfspn",
-            "qawCMl5",
-            "2F6j2B4",
-            "fiJxCVA",
-            "pCAIlxD",
-            "zJx2skh",
-            "2Gdl1u7",
-            "aJJAY4c",
-            "ros6RLC",
-            "DKLBJh7",
-            "eyxH0Wc",
-            "rJEkEw4",
-        ]
-        return HTML(
-            """
-        <video alt="test" controls autoplay=1>
-            <source src="https://openpuppies.com/mp4/%s.mp4"  type="video/mp4">
-        </video>
-        """
-            % (random.sample(pups, 1)[0])
-        )
+        print("YAYYY!! Test passed! 🎉🎉🎉\n\n\n")
+        return passed()
     else:
         print("Oh no! Test failed! 😢")
-        assert np.allclose(avg_embeddings, embeddings, atol=1e-3) and np.allclose(
-            cls_embeddings, embeddings, atol=1e-3
-        ), f"Your embeddings {embeddings} are not correct! It should be {avg_embeddings} or {cls_embeddings}"
+        return None
+
+
+
+def get_similarity(target, candidates, top_k:int = 3) -> Dict[int, float]:
+  # Turn list into array
+  candidates = np.array(candidates)
+  target = np.expand_dims(np.array(target),axis=0)
+
+  # Calculate cosine similarity
+  sim = cosine_similarity(target, candidates)
+  sim = np.squeeze(sim).tolist()
+  sort_index = np.argsort(sim)[::-1][:top_k]
+  sort_score = [sim[i] for i in sort_index][:top_k]
+  similarity_scores = dict(zip(sort_index, sort_score))
+
+  # Return similarity scores
+  return similarity_scores
+
+
+def test_similarity(target, candidates, similarity, top_k:int = 3):
+    actual_similarity = get_similarity(target, candidates, top_k)
+    if actual_similarity == similarity:
+        print("YAYYY!! Test passed! 🎉🎉🎉\n\n\n")
+        return passed()
+    else:
+        print("Oh no! Test failed! 😢")
+        print(f"Similarity scores do not match! Expected: {similarity}, Actual: {actual_similarity}")
+        return None
