@@ -1,3 +1,4 @@
+import os
 import csv
 import torch
 import random
@@ -10,6 +11,14 @@ from sklearn.decomposition import PCA
 from transformers import DistilBertTokenizer, DistilBertModel
 from sklearn.metrics.pairwise import cosine_similarity
 
+def seed_everything(seed: int = 2023):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = True
 
 def passed():
     from IPython.display import HTML
